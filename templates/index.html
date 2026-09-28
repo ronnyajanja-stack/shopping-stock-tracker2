@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Shopping Stock Tracker</title>
+    
+    <!-- Mobile App PWA Settings -->
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --primary: #4f46e5;
+            --text: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+            --warning: #d97706;
+            --danger: #dc2626;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 16px 12px 60px 12px;
+        }
+
+        .container { max-width: 600px; margin: auto; }
+
+        .app-header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+        }
+
+        .app-header h1 { margin: 0; font-size: 20px; }
+        .app-header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .card h2 {
+            font-size: 15px;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--muted);
+        }
+        .empty-state span { font-size: 40px; display: block; margin-bottom: 8px; }
+
+        /* Item Row Card */
+        .item-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .item-card:last-child { border-bottom: none; }
+
+        .item-name { font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+        .item-qty { font-size: 14px; font-weight: 600; color: #1e293b; }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 3px;
+        }
+        .badge-instock { background: #dcfce7; color: var(--success); }
+        .badge-low { background: #fef3c7; color: var(--warning); }
+        .badge-out { background: #fee2e2; color: var(--danger); }
+
+        .controls { display: flex; gap: 8px; align-items: center; }
+        
+        .btn-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: #f1f5f9;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #334155;
+            transition: background 0.15s ease;
+        }
+        .btn-circle:active { background: #e2e8f0; }
+
+        .btn-delete {
+            background: #fee2e2;
+            color: var(--danger);
+            font-size: 14px;
+            border-color: #fecaca;
+        }
+        .btn-delete:active {
+            background: #fca5a5;
+        }
+
+        /* Form Inputs */
+        .form-group { margin-bottom: 12px; }
+        label { font-size: 12px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 4px; }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            font-weight: 700;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        .btn-submit:active {
+            background: #4338ca;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="app-header">
+        <h1>🛒 Shopping Stock Tracker</h1>
+        <p>Household Consumables & Inventory</p>
+    </div>
+
+    <!-- Active Items Card -->
+    <div class="card">
+        <h2>Current Stock</h2>
+        {% if items %}
+            {% for item in items %}
+            <div class="item-card">
+                <div>
+                    <div class="item-name">{{ item['item_name'] }}</div>
+                    <div class="item-qty">{{ item['current_balance'] }} {{ item['unit'] }}</div>
+                    <div>
+                        {% if item['current_balance'] <= 0 %}
+                            <span class="badge badge-out">Out of Stock</span>
+                        {% elif item['current_balance'] <= item['low_stock_threshold'] %}
+                            <span class="badge badge-low">Low Stock</span>
+                        {% else %}
+                            <span class="badge badge-instock">In Stock</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <!-- Minus button -->
+                    <form action="/quick_adjust/{{ item['id'] }}/minus" method="POST" style="margin: 0;">
+                        <button class="btn-circle" type="submit" title="Reduce by 1">−</button>
+                    </form>
+                    
+                    <!-- Plus button -->
+                    <form action="/quick_adjust/{{ item['id'] }}/add" method="POST" style="margin: 0;">
+                        <button class="btn-circle" type="submit" style="color: var(--primary); background: #e0e7ff;" title="Increase by 1">+</button>
+                    </form>
+
+                    <!-- Delete button with confirmation -->
+                    <form action="/delete_item/{{ item['id'] }}" method="POST" style="margin: 0;" onsubmit="return confirm('Remove {{ item['item_name'] }} completely from your list?');">
+                        <button class="btn-circle btn-delete" type="submit" title="Delete Item">🗑</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <!-- Empty state placeholder -->
+            <div class="empty-state">
+                <span>📦</span>
+                <strong>Your inventory is empty!</strong>
+                <p style="margin: 4px 0 0; font-size: 13px;">Use the form below to add your items.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Add Item Form -->
+    <div class="card">
+        <h2>Add New Consumable</h2>
+        <form action="/add_item" method="POST">
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" name="item_name" placeholder="e.g. Cooking Oil, Salt, Maize Flour" required>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>Unit</label>
+                    <select name="unit">
+                        <option value="pieces">pieces</option>
+                        <option value="bars">bars</option>
+                        <option value="packs">packs</option>
+                        <option value="tubes">tubes</option>
+                        <option value="rolls">rolls</option>
+                        <option value="litres">litres</option>
+                        <option value="kg">kg</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Initial Qty</label>
+                    <input type="number" step="0.25" min="0" name="initial_qty" value="1.0" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Low Threshold</label>
+                    <input type="number" step="0.25" min="0" name="threshold" value="1.0" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">+ Add To Inventory</button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
