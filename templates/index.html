@@ -246,5 +246,16 @@
     </div>
 </div>
 
+<!-- Service Worker Registration for PWA Installation -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/static/sw.js')
+      .then(reg => console.log('Service Worker registered successfully:', reg.scope))
+      .catch(err => console.log('Service Worker registration failed:', err));
+  });
+}
+</script>
+
 </body>
 </html>
